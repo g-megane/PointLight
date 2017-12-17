@@ -22,7 +22,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     directX.initDevice(w);
 
     // ViewMatrixの初期化
-    Vector3 eye = Vector3(0.0f, 1.0f, -5.0f); // カメラの座標
+    Vector3 eye = Vector3(0.0f, 2.0f, -2.0f); // カメラの座標
     Vector3 at  = Vector3(0.0f, 1.0f,  0.0f); // 注視対象
     Vector3 up  = Vector3::UP;                // 現在のワールド座標の上方向
     auto view   = Matrix::LookAtLH(eye, at, up);
@@ -50,6 +50,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         directX.begineFrame();
 
         // 回転
+        //TODO: ライトの位置を変更できるようにする
         if (w->getKeyDown('W')) {
             rotX += MyMath::PIDIV2 / 1800.0f;
         }
@@ -70,7 +71,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         // モデルの制御
         auto mtrX = Matrix::rotateX(rotX);
         auto mtrY = Matrix::rotateY(rotY);
-        auto mtt  = Matrix::translate(Vector3(0.0f, -1.0f, 0.0f));
+        auto mtt  = Matrix::translate(Vector3(0.0f, 0.0f, 0.0f));
         world = mtrX * mtrY * mtt;
         model.setWorldMatrix(world);
 
