@@ -1,5 +1,6 @@
 #include <d3dcompiler.h>
 #include "Model.h"
+#include "MyMath.h"
 
 namespace Lib
 {
@@ -20,15 +21,56 @@ namespace Lib
     {
         auto &directX = DirectX11::getInstance();
 
+        // 点光源のパラメータ
+        float light[4]       = { 0.0f, 2.0f, 0.0f, 0.0f }; // ライトの座標
+        float attenuation[4] = { 0.0f, 0.5f, 0.1f, 0.0f }; // ライトの距離による減衰パラメータ
+
+        // ライティングされるBoxとFloor
         ConstantBuffer cb;
         cb.world      = Matrix::transpose(world);
         cb.view       = Matrix::transpose(directX.getViewMatrix());
         cb.projection = Matrix::transpose(directX.getProjectionMatrix());
+        memcpy(cb.light, light, sizeof(light));
+        memcpy(cb.attenuation, attenuation, sizeof(attenuation));
         directX.getDeviceContext()->UpdateSubresource(constantBuffer.Get(), 0, nullptr, &cb, 0, 0);
 
         directX.getDeviceContext()->VSSetShader(vertexShader.Get(), nullptr, 0);
         directX.getDeviceContext()->VSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
         directX.getDeviceContext()->PSSetShader(pixelShader.Get(), nullptr, 0);
+        directX.getDeviceContext()->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
+        directX.getDeviceContext()->DrawIndexed(42, 0, 0);
+
+
+ /*       auto mtFloor = Matrix::Identify;
+        auto mttFloor = Matrix::translate(Vector3(0.0f, -0.5f, 0.0f));
+        auto mtsFloor = Matrix::scale(5.0f, 0.1f, 5.0f);
+        mtFloor = mtsFloor * mttFloor;
+
+        cb.world = Matrix::transpose(mtFloor);
+        memcpy(cb.light, light, sizeof(light));
+        memcpy(cb.attenuation, attenuation, sizeof(attenuation));
+        directX.getDeviceContext()->UpdateSubresource(constantBuffer.Get(), 0, nullptr, &cb, 0, 0);
+
+        directX.getDeviceContext()->VSSetShader(vertexShader.Get(), nullptr, 0);
+        directX.getDeviceContext()->VSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
+        directX.getDeviceContext()->PSSetShader(pixelShader.Get(), nullptr, 0);
+        directX.getDeviceContext()->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
+        directX.getDeviceContext()->DrawIndexed(36, 0, 0);
+*/
+       
+        // ライトの位置を示すオブジェクト
+        auto mtLight  = Matrix::Identify;
+        auto mttLight = Matrix::translate(Vector3(light[0], light[1], light[2]));
+        auto mtsLight = Matrix::scale(0.1f, 0.1f, 0.1f);
+        mtLight = mtsLight * mttLight;
+       
+        cb.world      = Matrix::transpose(mtLight);
+        directX.getDeviceContext()->UpdateSubresource(constantBuffer.Get(), 0, nullptr, &cb, 0, 0);
+
+        directX.getDeviceContext()->VSSetShader(vertexShader.Get(), nullptr, 0);
+        directX.getDeviceContext()->VSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
+        directX.getDeviceContext()->PSSetShader(pixelShader.Get(), nullptr, 0);
+        directX.getDeviceContext()->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
         directX.getDeviceContext()->DrawIndexed(36, 0, 0);
     }
 
@@ -67,7 +109,7 @@ namespace Lib
         // InputLayouの定義
         D3D11_INPUT_ELEMENT_DESC layout[] = {
             { "POSITION", 0,    DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            {    "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            {   "NORMAL", 0,    DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         };
         UINT numElements = ARRAYSIZE(layout);
 
@@ -98,20 +140,47 @@ namespace Lib
         // VertexBufferの定義
         SimpleVertex vertices[] =
         {
-            { { -1.0f,  1.0f, -1.0f },{ 0.0f, 0.0f, 1.0f, 1.0f } },
-            { {  1.0f,  1.0f, -1.0f },{ 0.0f, 1.0f, 0.0f, 1.0f } },
-            { {  1.0f,  1.0f,  1.0f },{ 0.0f, 1.0f, 1.0f, 1.0f } },
-            { { -1.0f,  1.0f,  1.0f },{ 1.0f, 0.0f, 0.0f, 1.0f } },
-            { { -1.0f, -1.0f, -1.0f },{ 1.0f, 0.0f, 1.0f, 1.0f } },
-            { {  1.0f, -1.0f, -1.0f },{ 1.0f, 1.0f, 0.0f, 1.0f } },
-            { {  1.0f, -1.0f,  1.0f },{ 1.0f, 1.0f, 1.0f, 1.0f } },
-            { { -1.0f, -1.0f,  1.0f },{ 0.0f, 0.0f, 0.0f, 1.0f } },
+            { { -0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f } },
+            { {  0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f } },
+            { { -0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f } },
+            { {  0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f } },
+ 
+            { { -0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f } },
+            { { -0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f } },
+            { {  0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f } },
+            { {  0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f } },
+ 
+            { { -0.5f,  0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f } },
+            { { -0.5f,  0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f } },
+            { { -0.5f, -0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f } },
+ 
+            { {  0.5f,  0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f } },
+ 
+            { { -0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f } },
+            { {  0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f } },
+            { { -0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f } },
+            { {  0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f } },
+ 
+            { { -0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f } },
+            { { -0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f } },
+            { {  0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f } },
+            { {  0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f } },
+ 
+ 
+            { { -5.0f, -0.5f,  5.0f }, {  0.0f,  1.0f,  0.0f } },
+            { {  5.0f, -0.5f,  5.0f }, {  0.0f,  1.0f,  0.0f } },
+            { { -5.0f, -0.5f, -5.0f }, {  0.0f,  1.0f,  0.0f } },
+            { {  5.0f, -0.5f, -5.0f }, {  0.0f,  1.0f,  0.0f } },
         };
 
         D3D11_BUFFER_DESC bd;
         ZeroMemory(&bd, sizeof(bd));
         bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.ByteWidth = sizeof(SimpleVertex) * 8;
+        bd.ByteWidth = sizeof(SimpleVertex) * 28;
         bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
         bd.CPUAccessFlags = 0;
 
@@ -132,26 +201,29 @@ namespace Lib
         // 頂点バッファの作成
         WORD indices[] =
         {
-            3, 1, 0,
-            2, 1, 3,
+            0,  1,  2,
+            3,  2,  1,
+           
+            4,  5,  6,
+            7,  6,  5,
+           
+            8,  9, 10, 
+            11, 10,  9,
 
-            0, 5, 4,
-            1, 5, 0,
+            12, 13, 14,
+            15, 14, 13,
 
-            3, 4, 7,
-            0, 4, 3,
+            16, 17, 18,
+            19, 18, 17,
 
-            1, 6, 5,
-            2, 6, 1,
-
-            2, 7, 6,
-            3, 7, 2,
-
-            6, 4, 5,
-            7, 4, 6,
+            20, 21, 22,
+            23, 22, 21, 
+ 
+            24, 25, 26,
+            27, 26, 25, 
         };
         bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.ByteWidth = sizeof(WORD) * 36; // 36頂点、12三角形
+        bd.ByteWidth = sizeof(WORD) * 42; // 36頂点、12三角形
         bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
         bd.CPUAccessFlags = 0;
         initData.pSysMem = indices;

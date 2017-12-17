@@ -26,7 +26,7 @@ namespace Lib
         struct SimpleVertex
         {
             float pos[3];
-            float color[4];
+            float normal[3];
         };
 
         struct ConstantBuffer
@@ -34,6 +34,8 @@ namespace Lib
             Matrix world;
             Matrix view;
             Matrix projection;
+            float light[4];
+            float attenuation[4];
         };
 
         ComPtr<ID3D11VertexShader>     vertexShader;
