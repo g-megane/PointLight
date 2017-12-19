@@ -1,10 +1,10 @@
 cbuffer ConstantBuffer : register(b0)
 {
-    matrix World;
-    matrix View;
-    matrix Projection;
-    float4 Light;
-    float4 Attenuation;
+    matrix World;       // ワールド行列
+    matrix View;        // ビュー行列
+    matrix Projection;  // 射影行列
+    float4 Light;       // 光源座標
+    float4 Attenuation; // 光源減衰パラメータ
 }
 
 struct VS_INPUT
@@ -15,9 +15,9 @@ struct VS_INPUT
 
 struct VS_OUTPUT
 {
-    float4 Pos  : SV_POSITION;
-    float4 PosW : POSITION0;
-    float4 Normalw : NORMAL0;
+    float4 Pos  : SV_POSITION; // 各行列の変換を終えた座標
+    float4 PosW : POSITION0;   // ワールド座標系の座標
+    float4 Normalw : NORMAL0;  // ワールド座標系の法線
 };
 
 VS_OUTPUT VS(VS_INPUT input)

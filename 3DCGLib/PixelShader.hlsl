@@ -1,10 +1,10 @@
 cbuffer ConstantBuffer : register(b0)
 {
-    matrix World;
-    matrix View;
-    matrix Projection;
-    float4 Light;
-    float4 Attenuation;
+    matrix World;       // ワールド行列
+    matrix View;        // ビュー行列
+    matrix Projection;  // 射影行列
+    float4 Light;       // 光源座標
+    float4 Attenuation; // 光源減衰パラメータ
 }
 
 struct PS_INPUT
@@ -29,9 +29,9 @@ float4 PS(PS_INPUT input) : SV_Target
     len = length(dir);
 
     // 点光源の方向を正規化
-    dir = dir / len;
+    dir = normalize(dir);
 
-    // 拡散
+    // 拡散(「点光源の方向」と「法線の方向」の内積から明るさを算出)
     colD = saturate(dot(normalize(input.NormalW.xyz), dir));
 
     // 減衰
