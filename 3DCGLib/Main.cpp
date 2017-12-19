@@ -38,9 +38,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     Model model = Model();
     Matrix world;
     world = Matrix::Identify;
+    model.setWorldMatrix(world);
 
-    float rotX = 0.0f;
-    float rotY = 0.0f;
+    float posX = 0.0f;
+    float posY = 0.0f;
+    float posZ = 0.0f;
 
     // 説明
     MessageBox(w->getHWND(), L"「W」「A」「S」「D」でモデルの回転", L"操作説明", MB_OK | MB_ICONINFORMATION);
@@ -49,31 +51,34 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     while (w->Update().message != WM_QUIT) {
         directX.begineFrame();
 
-        // 回転
-        //TODO: ライトの位置を変更できるようにする
+        // 移動        
+        posX = posY = posZ = 0.0f;
+
         if (w->getKeyDown('W')) {
-            rotX += MyMath::PIDIV2 / 1800.0f;
+            posZ = 0.01f;
         }
-        if (w->getKeyDown('S')) {
-            rotX -= MyMath::PIDIV2 / 1800.0f;
+        else if (w->getKeyDown('S')) {
+            posZ = -0.01f;
         }
         if (w->getKeyDown('A')) {
-            rotY += MyMath::PIDIV2 / 1800.0f;
+            posX = -0.01f;
         }
-        if (w->getKeyDown('D')) {
-            rotY -= MyMath::PIDIV2 / 1800.0f;
+        else if (w->getKeyDown('D')) {
+            posX = 0.01f;
+        }
+        if (w->getKeyDown('E')) {
+            posY = 0.01f;
+        }
+        else if (w->getKeyDown('Q')) {
+            posY = -0.01f;
         }
 
         // オーバーフローの制御
-        rotX = MyMath::rollup<float>(rotX, MyMath::PI2);
-        rotY = MyMath::rollup<float>(rotY, MyMath::PI2);
+        //posX = MyMath::clamp<float>(posX, -10.0f, 10.0f);
+        //posZ = MyMath::clamp<float>(posZ, -10.0f, 10.0f);
 
-        // モデルの制御
-        auto mtrX = Matrix::rotateX(rotX);
-        auto mtrY = Matrix::rotateY(rotY);
-        auto mtt  = Matrix::translate(Vector3(0.0f, 0.0f, 0.0f));
-        world = mtrX * mtrY * mtt;
-        model.setWorldMatrix(world);
+        // ライトのモデルの制御
+        model.getLightPos().translate(posX, posY, posZ);
 
         // 描画
         model.render(Lib::Color(Lib::Color::BLUE));
