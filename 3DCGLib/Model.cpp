@@ -8,6 +8,7 @@ namespace Lib
     Model::Model()
     {
         world = Matrix::Identify;
+        lightPos = Vector3(0.0f, 2.0f, 0.0f);
         init();
     }
 
@@ -21,9 +22,16 @@ namespace Lib
     {
         auto &directX = DirectX11::getInstance();
 
-        // 点光源のパラメータ
-        float light[4]       = { 0.0f, 2.0f, 0.0f, 0.0f }; // ライトの座標
-        float attenuation[4] = { 0.0f, 0.5f, 0.1f, 0.0f }; // ライトの距離による減衰パラメータ
+        // 光源の座標
+        float light[4]       = { lightPos.x, lightPos.y, lightPos.z, 0.0f };
+        // 光源の距離による減衰パラメータ
+        float attenuation[4] = 
+        { 
+            0.1f, // 一定減衰係数（小さくするとライトの最大の明るさが増える）
+            0.5f, // 線形減衰係数（光源付近の減衰を調整）
+            0.1f, // 2次減衰係数（遠方の減衰を微調整）
+            0.0f
+        }; 
 
         // ライティングされるBoxとFloor
         ConstantBuffer cb;
@@ -41,23 +49,6 @@ namespace Lib
         directX.getDeviceContext()->DrawIndexed(42, 0, 0);
 
 
- /*       auto mtFloor = Matrix::Identify;
-        auto mttFloor = Matrix::translate(Vector3(0.0f, -0.5f, 0.0f));
-        auto mtsFloor = Matrix::scale(5.0f, 0.1f, 5.0f);
-        mtFloor = mtsFloor * mttFloor;
-
-        cb.world = Matrix::transpose(mtFloor);
-        memcpy(cb.light, light, sizeof(light));
-        memcpy(cb.attenuation, attenuation, sizeof(attenuation));
-        directX.getDeviceContext()->UpdateSubresource(constantBuffer.Get(), 0, nullptr, &cb, 0, 0);
-
-        directX.getDeviceContext()->VSSetShader(vertexShader.Get(), nullptr, 0);
-        directX.getDeviceContext()->VSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
-        directX.getDeviceContext()->PSSetShader(pixelShader.Get(), nullptr, 0);
-        directX.getDeviceContext()->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
-        directX.getDeviceContext()->DrawIndexed(36, 0, 0);
-*/
-       
         // ライトの位置を示すオブジェクト
         auto mtLight  = Matrix::Identify;
         auto mttLight = Matrix::translate(Vector3(light[0], light[1], light[2]));
@@ -84,6 +75,11 @@ namespace Lib
     Matrix Model::getWorldMatrix() const
     {
         return world;
+    }
+
+    Vector3& Model::getLightPos()
+    {
+        return lightPos;
     }
 
     // 初期化

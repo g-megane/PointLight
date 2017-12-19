@@ -18,6 +18,8 @@ namespace Lib
 
         void setWorldMatrix(Matrix &_world);
         Matrix getWorldMatrix() const;
+
+        Vector3& getLightPos();
         
     private:
         HRESULT init();
@@ -38,14 +40,15 @@ namespace Lib
             float attenuation[4];
         };
 
-        ComPtr<ID3D11VertexShader>     vertexShader;
-        ComPtr<ID3D11PixelShader>      pixelShader;
-        ComPtr<ID3D11InputLayout>      vertexLayout;
-        ComPtr<ID3D11Buffer>           vertexBuffer;
-        ComPtr<ID3D11Buffer>           indexBuffer;
-        ComPtr<ID3D11Buffer>           constantBuffer;
+        ComPtr<ID3D11VertexShader> vertexShader;
+        ComPtr<ID3D11PixelShader>  pixelShader;
+        ComPtr<ID3D11InputLayout>  vertexLayout;
+        ComPtr<ID3D11Buffer>       vertexBuffer;
+        ComPtr<ID3D11Buffer>       indexBuffer;
+        ComPtr<ID3D11Buffer>       constantBuffer;
 
         Matrix world;
+        Vector3 lightPos;
     };
 }
 #endif
