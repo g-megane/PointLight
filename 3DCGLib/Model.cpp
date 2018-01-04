@@ -112,7 +112,7 @@ namespace Lib
         // InputLayoutÇÃçÏê¨
         hr = directX.getDevice()->CreateInputLayout(layout, numElements, VSBlob->GetBufferPointer(), VSBlob->GetBufferSize(), vertexLayout.GetAddressOf());
         if (FAILED(hr)) {
-            MessageBox(NULL, L"CreateInputLayoutÇÃé∏îs(VS)", L"Error", MB_OK);
+            MessageBox(nullptr, L"CreateInputLayoutÇÃé∏îs", L"Error", MB_OK);
             return hr;
         }
 
@@ -122,7 +122,7 @@ namespace Lib
         // PixelShaderÇÃì«Ç›çûÇ›
         auto PSBlob = shaderCompile(L"PixelShader.hlsl", "PS", "ps_4_0");
         if (PSBlob == nullptr) {
-            MessageBox(nullptr, L"shaderCompile()ÇÃé∏îs(VS)", L"Error", MB_OK);
+            MessageBox(nullptr, L"shaderCompile()ÇÃé∏îs(PS)", L"Error", MB_OK);
             return hr;
         }
 
