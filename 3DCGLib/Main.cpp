@@ -1,11 +1,17 @@
 #include <Windows.h>
+#include <sstream>
+#include <locale>
 #include "Window.h"
 #include "DirectX11.h"
 #include "Model.h"
 #include "Matrix.h"
 #include "MyMath.h"
+#include "Time.h"
 
 using namespace Lib;
+
+const float FPS   = 60.0f;  // 実行したいfps
+const float SPEED = 0.001f; // ライトの移動速度
 
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -48,34 +54,61 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     MessageBox(w->getHWND(), L"「W」「A」「S」「D」でモデルの回転", L"操作説明", MB_OK | MB_ICONINFORMATION);
 
     // 更新処理
+    Time time = Time();
+    int fps = 0;
+    float countTime = 0.0f;
+    float deltaTime = 0.0f;
+    std::ostringstream oss;
+    WCHAR wcstr[50];
+    size_t size = 0;
+    setlocale(LC_ALL, "japanese"); // 後のmbstowcs_sの為の処理
+
     while (w->Update().message != WM_QUIT) {
         directX.begineFrame();
+
+        // FPSの固定
+        if (!time.timeOver(1000.0f / FPS)) {
+            continue;
+        }
+
+        deltaTime = time.getDeltaTime();
+        countTime += deltaTime;
+
+        // 1秒に１回行う処理
+        if (countTime > 1000.0f) {
+            // fpsをデバッガに出力
+            oss.str("");
+            oss << "fps: " << fps << std::endl;
+            mbstowcs_s(&size, wcstr, 20, oss.str().c_str(), _TRUNCATE);
+            OutputDebugString(wcstr);
+            // 変数のリセット
+            fps = 0;
+            countTime = 0.0f;
+        }
+        time.reset();
+        ++fps;
 
         // 移動        
         posX = posY = posZ = 0.0f;
 
         if (w->getKeyDown('W')) {
-            posZ = 0.01f;
+            posZ = SPEED * deltaTime;
         }
         else if (w->getKeyDown('S')) {
-            posZ = -0.01f;
+            posZ = -SPEED * deltaTime;
         }
         if (w->getKeyDown('A')) {
-            posX = -0.01f;
+            posX = -SPEED * deltaTime;
         }
         else if (w->getKeyDown('D')) {
-            posX = 0.01f;
+            posX = SPEED * deltaTime;
         }
         if (w->getKeyDown('E')) {
-            posY = 0.01f;
+            posY = SPEED * deltaTime;
         }
         else if (w->getKeyDown('Q')) {
-            posY = -0.01f;
+            posY = -SPEED * deltaTime;
         }
-
-        // オーバーフローの制御
-        //posX = MyMath::clamp<float>(posX, -10.0f, 10.0f);
-        //posZ = MyMath::clamp<float>(posZ, -10.0f, 10.0f);
 
         // ライトのモデルの制御
         model.getLightPos().translate(posX, posY, posZ);
